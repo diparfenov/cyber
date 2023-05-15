@@ -12,7 +12,7 @@ contract MeetupTracker is Ownable {
     }
 
     struct AlbumProduct {
-        Album album;
+        Al//bum album;
         AlbumState state;
         uint price;
         string title;
