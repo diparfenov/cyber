@@ -8,64 +8,59 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract MeetupTracker is Ownable {
-    struct Donate {
-        address _address;
-        uint _value;
-    }
-
+    
     struct Meetups {
         Meetup meetup;
         string title;
         uint index;
-        bool isActive;
+        bool isActive;      
     }
 
-    mapping(uint => Donate[]) donatesAll;
-    mapping(uint => mapping(address => uint)) donatesByAddress;
+    mapping(uint => mapping(address => uint)) public donatesByAddress;
 
     Meetups[] public meetups;
-    uint currentIndex;
+    uint public currentIndex;
 
     event NewMeetupCreated(
-        uint _meetupIndex,
+        uint indexed _meetupIndex,
         bool _isActive,
-        address _meetupAddress,
+        address indexed _meetupAddress,
+        string indexed _meetupTitle
+    );
+
+    event NewDonate(
+        address indexed _address,
+        uint indexed _value,
+        uint indexed _meetupIndex,
         string _meetupTitle
     );
 
-    // function donate(uint _index) external payable {
-    //     uint currentMeetupDonate = meetups[_index].totalMeetupDonats;
-    //     meetups[_index].donate[currentMeetupDonate][msg.sender] += msg.value;
-    // }
+    modifier onlyOwnerV2(address _address) {
+        require(owner() == _address, "You're not an owner!");
+        _;
+    }
+
+    function donate(uint _index, address _address) external payable {
+        donatesByAddress[_index][_address]+=msg.value;
+
+        emit NewDonate(_address, msg.value, _index, meetups[_index].title);
+    }   
+
+    function changeMeetupTitle(uint _index, string memory _newTitle, address _addressOwner) external onlyOwnerV2(_addressOwner) {
+        meetups[_index].title = _newTitle;
+    }
 
     // function viewDonate(uint _index, address _address) public view  returns (uint) {
     //    return meetups[_index].donate[_address];
 
     // }
 
-    function createMeetup(
-        string memory _title,
-        string memory _city,
-        uint _startsDate,
-        uint _endsDate
-    ) public onlyOwner {
-        Meetup newMeetupContract = new Meetup(
-            msg.sender,
-            _title,
-            _city,
-            currentIndex,
-            _startsDate,
-            _endsDate,
-            true,
-            this
-        );
+    function createMeetup(string memory _title, string memory _city, uint _startsDate,
+        uint _endsDate) public onlyOwner {
 
-        Meetups memory newMeetup = Meetups(
-            newMeetupContract,
-            _title,
-            currentIndex,
-            true
-        );
+        Meetup newMeetupContract = new Meetup(msg.sender, _title, _city, currentIndex, _startsDate, _endsDate, true, this);
+
+        Meetups memory newMeetup = Meetups(newMeetupContract, _title, currentIndex, true);
 
         meetups.push(newMeetup);
 
@@ -79,7 +74,17 @@ contract MeetupTracker is Ownable {
         currentIndex++;
     }
 
-    function deleteMeetup() public {}
+    function getMeetups() public view returns(Meetups[] memory) {
+        return meetups;
+    }
+
+    function getMeetups(uint _index) public view returns(Meetups memory) {
+        return meetups[_index];
+    }
+    function editMeetups(uint _index) public {
+        meetups[_index].title = "123";
+    }
+
 }
 
 contract Meetup is
@@ -89,20 +94,20 @@ contract Meetup is
     ERC721Burnable,
     Ownable
 {
-    mapping(address => Member) public members;
+    mapping (address => Member) public members;
     address[] public membersAddress;
     uint public registrations;
     uint public currentTokenId;
 
     MeetupTracker public tracker;
 
-    string public title;
-    string public city;
-    uint public index;
-    uint public startsDate;
-    uint public endsDate;
-    bool public isActive;
-
+        string public title;
+        string public city;
+        uint public index;
+        uint public startsDate;
+        uint public endsDate;
+        bool public isActive;
+        
     struct Member {
         string memberName;
         string memberCompany;
@@ -116,21 +121,23 @@ contract Meetup is
         Registered,
         CheckedAndGotNft
     }
-
-    event Registration(
+    
+    event Registration (
         address indexed _memberAddress,
         string indexed _memberName,
         uint indexed _time,
-        MemberState _state
+        MemberState _state         
     );
 
-    event CheckedAndGotNft(
+    event CheckedAndGotNft (
         address indexed _memberAddress,
         uint indexed _time,
-        MemberState _state
+        MemberState _state           
     );
 
-    event BatchMint(address[] indexed _addresses);
+    event BatchMint (
+        address[] indexed _addresses
+    );
 
     constructor(
         address _owner,
@@ -141,52 +148,44 @@ contract Meetup is
         uint _endsDate,
         bool _isActive,
         MeetupTracker _tracker
-    ) ERC721("MyToken", "MTK") {
-        transferOwnership(_owner);
+        ) ERC721("MyToken", "MTK") {
+            transferOwnership(_owner);
         title = _title;
         city = _city;
         index = _index;
         startsDate = _startsDate;
         endsDate = _endsDate;
         isActive = _isActive;
-        tracker = _tracker;
+        tracker = MeetupTracker(_tracker);
     }
 
-    function reg(
-        string memory _name,
-        string memory _company,
-        string memory _role
-    ) public {
-        require(
-            members[msg.sender].state == MemberState.NotRegistred,
-            "You're already registred!"
-        );
+    function doBid() external payable {
+        tracker.donate{value: msg.value}(index, msg.sender);
+        //donatesByAddress[_index][msg.sender]+=msg.value;
+    }
+
+    function reg(string memory _name, string memory _company, string memory _role ) public {
+        require(members[msg.sender].state == MemberState.NotRegistred, "You're already registred!" );
         require(block.timestamp < startsDate, "Registration has already ended");
         require(isActive, "Meetup has already ended");
 
-        Member memory newMember = Member(
-            _name,
-            _company,
-            _role,
-            block.timestamp,
-            MemberState.Registered
-        );
-
+        Member memory newMember = Member(_name, _company, _role, block.timestamp, MemberState.Registered);
+       
         members[msg.sender] = newMember;
         membersAddress.push(msg.sender);
 
         registrations++;
 
-        emit Registration(
-            msg.sender,
-            _name,
-            block.timestamp,
-            MemberState.Registered
-        );
+        emit Registration(msg.sender, _name, block.timestamp,MemberState.Registered);
     }
 
-    function verify(address _addr) public view returns (bool) {
+    function verify(address _addr) public view returns(bool) {
         return (members[_addr].state == MemberState.Registered);
+    }
+
+    function changeTitle(string memory _newTitle) public onlyOwner {
+        title = _newTitle;
+        tracker.changeMeetupTitle(index, _newTitle, msg.sender);
     }
 
     function _baseURI() internal pure override returns (string memory) {
@@ -199,23 +198,19 @@ contract Meetup is
         _setTokenURI(currentTokenId, tokenId);
         currentTokenId++;
     }
-
-    function safeBatchMint(
-        address[] memory addresses,
-        string calldata tokenId
-    ) public onlyOwner {
+    function safeBatchMint(address[] memory addresses, string calldata tokenId) public onlyOwner {
+        
         //uint[] memory tokenIds = new uint[]()
-        for (uint i = 0; i < addresses.length; i++) {
+        for(uint i = 0; i < addresses.length; i++) {
             address addr = addresses[i];
-            if (members[addr].state == MemberState.Registered) {
+            if(members[addr].state == MemberState.Registered) {
                 safeMint(addr, tokenId);
-                members[addr].state = MemberState.CheckedAndGotNft;
+                members[addr].state = MemberState.CheckedAndGotNft;  
             }
         }
 
-        emit BatchMint(addresses);
+        emit BatchMint (addresses);
     }
-
     // The following functions are overrides required by Solidity.
 
     function _beforeTokenTransfer(
