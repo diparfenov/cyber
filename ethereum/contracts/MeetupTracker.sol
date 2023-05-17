@@ -7,6 +7,17 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
+library Events {
+  event NewMeetupCreated(
+        uint indexed _meetupIndex,
+        bool _isActive,
+        address indexed _meetupAddress,
+        string indexed _meetupTitle
+    );
+
+  
+}
+
 contract MeetupTracker is Ownable {
     
     struct Meetups {
@@ -21,12 +32,12 @@ contract MeetupTracker is Ownable {
     Meetups[] public meetups;
     uint public currentIndex;
 
-    event NewMeetupCreated(
-        uint indexed _meetupIndex,
-        bool _isActive,
-        address indexed _meetupAddress,
-        string indexed _meetupTitle
-    );
+    // event NewMeetupCreated(
+    //     uint indexed _meetupIndex,
+    //     bool _isActive,
+    //     address indexed _meetupAddress,
+    //     string indexed _meetupTitle
+    // );
 
     event NewDonate(
         address indexed _address,
