@@ -1,59 +1,232 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
 
+import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
 
-import "./MeetupTracker.sol";
-
-contract MyToken is
+contract Meetup is
     ERC721,
     ERC721Enumerable,
     ERC721URIStorage,
     ERC721Burnable,
     Ownable
 {
-    MeetupTracker tracker;
+    string public title;
+    string public city; //
+    uint public index;
+    uint public startsDate; //
+    uint public endsDate; //
+    bool public isActive;
+
+    uint public registrations;
     uint public currentTokenId;
 
-    string public title;
-    string public city;
-    uint public index;
-    uint public startsDate;
-    uint public endsDate;
-
-    enum MembertState {
-        Registered,
-        CheckedIn,
-        GotNft
-    }
+    mapping(address => Member) public members;
+    address[] public membersAddress;
+    MeetupTracker public tracker;
 
     struct Member {
-        string name;
-        string companyOrProject;
-        string positionOrRole;
-        MembertState state;
+        string memberName;
+        string memberCompany;
+        string memberRole;
+        uint date;
+        MemberState state;
     }
 
-    Member[] public members;
+    enum MemberState {
+        NotRegistred,
+        Registered,
+        CheckedAndGotNft
+    }
 
     constructor(
+        address _owner,
         string memory _title,
         string memory _city,
         uint _index,
         uint _startsDate,
         uint _endsDate,
+        bool _isActive,
         MeetupTracker _tracker
     ) ERC721("MyToken", "MTK") {
+        transferOwnership(_owner);
         title = _title;
         city = _city;
         index = _index;
         startsDate = _startsDate;
         endsDate = _endsDate;
-        tracker = _tracker;
+        isActive = _isActive;
+        tracker = MeetupTracker(_tracker);
+    }
+
+    function doDonate() external payable {
+        require(msg.value > 0, "Donation can't be less than zero");
+        tracker.donate{value: msg.value}(index, msg.sender);
+    }
+
+    function closeMeetup() public onlyOwner {
+        require(endsDate < block.timestamp, "Meetup is not over yet!");
+        require(isActive, "Meetup already closed!");
+        isActive = false;
+        tracker.closeMeetupByIndex(index, msg.sender);
+    }
+
+    function reg(
+        string memory _name,
+        string memory _company,
+        string memory _role
+    ) public {
+        require(isActive, "Meetup has already ended");
+        require(block.timestamp < startsDate, "Registration has already ended");
+        require(
+            members[msg.sender].state == MemberState.NotRegistred,
+            "You're already registred!"
+        );
+
+        Member memory newMember = Member(
+            _name,
+            _company,
+            _role,
+            block.timestamp,
+            MemberState.Registered
+        );
+
+        members[msg.sender] = newMember;
+        membersAddress.push(msg.sender);
+
+        registrations++;
+
+        emit Events.Registration(
+            msg.sender,
+            _name,
+            block.timestamp,
+            uint(MemberState.Registered)
+        );
+    }
+
+    function reg(string memory _name) public {
+        require(isActive, "Meetup has already ended");
+        require(block.timestamp < startsDate, "Registration has already ended");
+        require(
+            members[msg.sender].state == MemberState.NotRegistred,
+            "You're already registred!"
+        );
+
+        Member memory newMember = Member(
+            _name,
+            "",
+            "",
+            block.timestamp,
+            MemberState.Registered
+        );
+
+        members[msg.sender] = newMember;
+        membersAddress.push(msg.sender);
+
+        registrations++;
+
+        emit Events.Registration(
+            msg.sender,
+            _name,
+            block.timestamp,
+            uint(MemberState.Registered)
+        );
+    }
+
+    function regWithCompany(
+        string memory _name,
+        string memory _company
+    ) public {
+        require(isActive, "Meetup has already ended");
+        require(block.timestamp < startsDate, "Registration has already ended");
+        require(
+            members[msg.sender].state == MemberState.NotRegistred,
+            "You're already registred!"
+        );
+
+        Member memory newMember = Member(
+            _name,
+            _company,
+            "",
+            block.timestamp,
+            MemberState.Registered
+        );
+
+        members[msg.sender] = newMember;
+        membersAddress.push(msg.sender);
+
+        registrations++;
+
+        emit Events.Registration(
+            msg.sender,
+            _name,
+            block.timestamp,
+            uint(MemberState.Registered)
+        );
+    }
+
+    function regWithRole(string memory _name, string memory _role) public {
+        require(isActive, "Meetup has already ended");
+        require(block.timestamp < startsDate, "Registration has already ended");
+        require(
+            members[msg.sender].state == MemberState.NotRegistred,
+            "You're already registred!"
+        );
+
+        Member memory newMember = Member(
+            _name,
+            "",
+            _role,
+            block.timestamp,
+            MemberState.Registered
+        );
+
+        members[msg.sender] = newMember;
+        membersAddress.push(msg.sender);
+
+        registrations++;
+
+        emit Events.Registration(
+            msg.sender,
+            _name,
+            block.timestamp,
+            uint(MemberState.Registered)
+        );
+    }
+
+    function changeTitle(string memory _newTitle) public onlyOwner {
+        emit Events.ChangeTitle(index, title, _newTitle, block.timestamp);
+
+        title = _newTitle;
+        tracker.changeMeetupTitle(index, _newTitle, msg.sender);
+    }
+
+    function changeCity(string memory _newCity) public onlyOwner {
+        emit Events.ChangeCity(index, city, _newCity, block.timestamp);
+
+        city = _newCity;
+    }
+
+    function changeDate(
+        uint _newStartsDate,
+        uint _newEndsDate
+    ) public onlyOwner {
+        startsDate = _newStartsDate;
+        endsDate = _newEndsDate;
+
+        emit Events.ChangeDate(
+            index,
+            _newStartsDate,
+            _newEndsDate,
+            block.timestamp
+        );
+    }
+
+    function verify(address _addr) public view returns (bool) {
+        return (members[_addr].state == MemberState.Registered);
     }
 
     function _baseURI() internal pure override returns (string memory) {
@@ -64,7 +237,25 @@ contract MyToken is
         _safeMint(to, currentTokenId);
         //сопоставляем tokenURI и tokenId
         _setTokenURI(currentTokenId, tokenId);
+        members[to].state = MemberState.CheckedAndGotNft;
         currentTokenId++;
+    }
+
+    function safeBatchMintAndCloseMeetup(
+        address[] memory addresses,
+        string calldata tokenId
+    ) public onlyOwner {
+        require(isActive, "Meetup is closed!");
+        for (uint i = 0; i < addresses.length; i++) {
+            address addr = addresses[i];
+            if (members[addr].state == MemberState.Registered) {
+                safeMint(addr, tokenId);
+            }
+        }
+
+        emit Events.BatchMint(addresses, block.timestamp);
+
+        closeMeetup();
     }
 
     // The following functions are overrides required by Solidity.
