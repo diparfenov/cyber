@@ -16,15 +16,8 @@ library Events {
         uint _atTime
     );
 
-    event ChangeTitle(
-        uint indexed _index,
-        string indexed _oldTitle,
-        string indexed _newTitle,
-        uint _atTime
-    );
-
     event CloseMeetup(
-        uint indexed _index,
+        uint indexed _index, 
         bool indexed _isActive,
         uint _atTime
     );
@@ -41,36 +34,61 @@ library Events {
         address indexed _address,
         uint indexed _value,
         uint indexed _atTime
-    );
+    );  
 
     event Withdraw(
-        uint indexed _amount,
+        uint indexed _amount, 
         address indexed _address,
         uint indexed _atTime
     );
 
-    event Registration(
+    event Registration (
         address indexed _memberAddress,
         string indexed _memberName,
         uint indexed _atTime,
-        uint _state
+        uint _state         
     );
 
-    event BatchMint(address[] indexed _addresses, uint indexed _atTime);
+    event BatchMint (
+        address[] indexed _addresses,
+        uint indexed _atTime          
+    );
+
+    event ChangeTitle(
+        uint indexed _index, 
+        string indexed _oldTitle,
+        string indexed _newTitle,
+        uint _atTime
+    );
+
+    event ChangeCity(
+        uint indexed _index, 
+        string indexed _oldCity,
+        string indexed _newCity,
+        uint  _atTime
+    );
+
+    event ChangeDate(
+        uint indexed _index, 
+        uint indexed _newStartsDate,
+        uint indexed _newEndsDate,
+        uint  _atTime
+    );
 }
 
 contract MeetupTracker is Ownable {
+    
     struct Meetups {
         Meetup meetup;
         string title;
         uint index;
-        bool isActive;
-        uint timeCreated;
+        bool isActive;  
+        uint timeCreated;    
     }
 
     Meetups[] public meetups;
     uint public currentIndex;
-    mapping(address => uint) public donatesGlobal;
+    mapping (address => uint) public donatesGlobal;
     mapping(uint => mapping(address => uint)) public donatesByAddress;
 
     modifier onlyOwnerV2(address _address) {
@@ -78,30 +96,11 @@ contract MeetupTracker is Ownable {
         _;
     }
 
-    function createMeetup(
-        string memory _title,
-        string memory _city,
-        uint _startsDate,
-        uint _endsDate
-    ) public onlyOwner {
-        Meetup newMeetupContract = new Meetup(
-            msg.sender,
-            _title,
-            _city,
-            currentIndex,
-            _startsDate,
-            _endsDate,
-            true,
-            this
-        );
+    function createMeetup(string memory _title, string memory _city, uint _startsDate, uint _endsDate) public onlyOwner {
 
-        Meetups memory newMeetup = Meetups(
-            newMeetupContract,
-            _title,
-            currentIndex,
-            true,
-            block.timestamp
-        );
+        Meetup newMeetupContract = new Meetup(msg.sender, _title, _city, currentIndex, _startsDate, _endsDate, true, this);
+
+        Meetups memory newMeetup = Meetups(newMeetupContract, _title, currentIndex, true, block.timestamp);
 
         meetups.push(newMeetup);
 
@@ -114,36 +113,18 @@ contract MeetupTracker is Ownable {
         );
 
         currentIndex++;
-    }
+    } 
 
-    function changeMeetupTitle(
-        uint _index,
-        string memory _newTitle,
-        address _addressOwner
-    ) external onlyOwnerV2(_addressOwner) {
-        emit Events.ChangeTitle(
-            _index,
-            meetups[_index].title,
-            _newTitle,
-            block.timestamp
-        );
-
+    function changeMeetupTitle(uint _index, string memory _newTitle, address _addressOwner) external onlyOwnerV2(_addressOwner) {
         meetups[_index].title = _newTitle;
     }
 
-    function closeMeetupByIndex(
-        uint _index,
-        address _addressOwner
-    ) external onlyOwnerV2(_addressOwner) {
+    function closeMeetupByIndex(uint _index, address _addressOwner) external onlyOwnerV2(_addressOwner) {
         bool isActiveNow = meetups[_index].isActive;
         require(isActiveNow, "Meetup already closed!");
         isActiveNow = false;
-
-        emit Events.CloseMeetup(
-            _index,
-            meetups[_index].isActive,
-            block.timestamp
-        );
+        
+        emit Events.CloseMeetup(_index, meetups[_index].isActive, block.timestamp);
     }
 
     function withdraw(uint _amount) external onlyOwner {
@@ -156,13 +137,7 @@ contract MeetupTracker is Ownable {
     function donate(uint _index, address _address) external payable {
         donatesByAddress[_index][_address] += msg.value;
 
-        emit Events.Donate(
-            _address,
-            msg.value,
-            _index,
-            meetups[_index].title,
-            block.timestamp
-        );
+        emit Events.Donate(_address, msg.value, _index, meetups[_index].title, block.timestamp);
     }
 
     function donateGlobal() external payable {
@@ -171,20 +146,15 @@ contract MeetupTracker is Ownable {
         emit Events.DonateGlobal(msg.sender, msg.value, block.timestamp);
     }
 
-    function viewDonate(
-        uint _index,
-        address _address
-    ) public view returns (uint) {
-        return donatesByAddress[_index][_address];
+    function viewDonate(uint _index, address _address) public view  returns (uint) {
+       return donatesByAddress[_index][_address];
     }
 
-    function getMeetups() public view returns (Meetups[] memory) {
+    function getMeetups() public view returns(Meetups[] memory) {
         return meetups;
     }
 
-    function getMeetupByIndex(
-        uint _index
-    ) public view returns (Meetups memory) {
+    function getMeetupByIndex(uint _index) public view returns(Meetups memory) {
         return meetups[_index];
     }
 }
@@ -197,16 +167,16 @@ contract Meetup is
     Ownable
 {
     string public title;
-    string public city;
+    string public city; //
     uint public index;
-    uint public startsDate;
-    uint public endsDate;
-    bool public isActive;
+    uint public startsDate; //
+    uint public endsDate; //
+    bool public isActive; 
 
     uint public registrations;
     uint public currentTokenId;
 
-    mapping(address => Member) public members;
+    mapping (address => Member) public members;
     address[] public membersAddress;
     MeetupTracker public tracker;
 
@@ -233,8 +203,8 @@ contract Meetup is
         uint _endsDate,
         bool _isActive,
         MeetupTracker _tracker
-    ) ERC721("MyToken", "MTK") {
-        transferOwnership(_owner);
+        ) ERC721("MyToken", "MTK") {
+            transferOwnership(_owner);
         title = _title;
         city = _city;
         index = _index;
@@ -256,46 +226,88 @@ contract Meetup is
         tracker.closeMeetupByIndex(index, msg.sender);
     }
 
-    function reg(
-        string memory _name,
-        string memory _company,
-        string memory _role
-    ) public {
-        require(
-            members[msg.sender].state == MemberState.NotRegistred,
-            "You're already registred!"
-        );
-        require(block.timestamp < startsDate, "Registration has already ended");
+    function reg(string memory _name, string memory _company, string memory _role) public {
         require(isActive, "Meetup has already ended");
+        require(block.timestamp < startsDate, "Registration has already ended");
+        require(members[msg.sender].state == MemberState.NotRegistred, "You're already registred!" );     
 
-        Member memory newMember = Member(
-            _name,
-            _company,
-            _role,
-            block.timestamp,
-            MemberState.Registered
-        );
-
+        Member memory newMember = Member(_name, _company, _role, block.timestamp, MemberState.Registered);
+       
         members[msg.sender] = newMember;
         membersAddress.push(msg.sender);
 
         registrations++;
 
-        emit Events.Registration(
-            msg.sender,
-            _name,
-            block.timestamp,
-            uint(MemberState.Registered)
-        );
+        emit Events.Registration(msg.sender, _name, block.timestamp,uint(MemberState.Registered));
     }
 
-    function verify(address _addr) public view returns (bool) {
-        return (members[_addr].state == MemberState.Registered);
+    function reg(string memory _name) public {
+        require(isActive, "Meetup has already ended");
+        require(block.timestamp < startsDate, "Registration has already ended");
+        require(members[msg.sender].state == MemberState.NotRegistred, "You're already registred!" );     
+
+        Member memory newMember = Member(_name, "", "", block.timestamp, MemberState.Registered);
+       
+        members[msg.sender] = newMember;
+        membersAddress.push(msg.sender);
+
+        registrations++;
+
+        emit Events.Registration(msg.sender, _name, block.timestamp,uint(MemberState.Registered));
+    }
+
+    function regWithCompany(string memory _name, string memory _company) public {
+        require(isActive, "Meetup has already ended");
+        require(block.timestamp < startsDate, "Registration has already ended");
+        require(members[msg.sender].state == MemberState.NotRegistred, "You're already registred!" );     
+
+        Member memory newMember = Member(_name, _company, "", block.timestamp, MemberState.Registered);
+       
+        members[msg.sender] = newMember;
+        membersAddress.push(msg.sender);
+
+        registrations++;
+
+        emit Events.Registration(msg.sender, _name, block.timestamp,uint(MemberState.Registered));
+    }
+
+    function regWithRole(string memory _name, string memory _role) public {
+        require(isActive, "Meetup has already ended");
+        require(block.timestamp < startsDate, "Registration has already ended");
+        require(members[msg.sender].state == MemberState.NotRegistred, "You're already registred!" );     
+
+        Member memory newMember = Member(_name, "", _role, block.timestamp, MemberState.Registered);
+       
+        members[msg.sender] = newMember;
+        membersAddress.push(msg.sender);
+
+        registrations++;
+
+        emit Events.Registration(msg.sender, _name, block.timestamp,uint(MemberState.Registered));
     }
 
     function changeTitle(string memory _newTitle) public onlyOwner {
+        emit Events.ChangeTitle(index, title, _newTitle,block.timestamp);
+
         title = _newTitle;
         tracker.changeMeetupTitle(index, _newTitle, msg.sender);
+    }
+
+    function changeCity(string memory _newCity) public onlyOwner {
+        emit Events.ChangeCity(index, city, _newCity,block.timestamp);
+
+        city = _newCity;
+    }
+
+    function changeDate(uint _newStartsDate, uint _newEndsDate) public onlyOwner {
+        startsDate = _newStartsDate;
+        endsDate = _newEndsDate;
+        
+        emit Events.ChangeDate(index, _newStartsDate, _newEndsDate,block.timestamp);
+    }
+
+    function verify(address _addr) public view returns(bool) {
+        return (members[_addr].state == MemberState.Registered);
     }
 
     function _baseURI() internal pure override returns (string memory) {
@@ -309,24 +321,19 @@ contract Meetup is
         members[to].state = MemberState.CheckedAndGotNft;
         currentTokenId++;
     }
-
-    function safeBatchMintAndCloseMeetup(
-        address[] memory addresses,
-        string calldata tokenId
-    ) public onlyOwner {
+    function safeBatchMintAndCloseMeetup(address[] memory addresses, string calldata tokenId) public onlyOwner {
         require(isActive, "Meetup is closed!");
-        for (uint i = 0; i < addresses.length; i++) {
+        for(uint i = 0; i < addresses.length; i++) {
             address addr = addresses[i];
-            if (members[addr].state == MemberState.Registered) {
-                safeMint(addr, tokenId);
+            if(members[addr].state == MemberState.Registered) {
+                safeMint(addr, tokenId);  
             }
         }
 
-        emit Events.BatchMint(addresses, block.timestamp);
+        emit Events.BatchMint (addresses, block.timestamp);
 
         closeMeetup();
     }
-
     // The following functions are overrides required by Solidity.
 
     function _beforeTokenTransfer(
