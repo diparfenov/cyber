@@ -8,19 +8,14 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
 
 import "./MeetupTracker.sol";
+import "./Events.sol";
 
-contract Meetup is
-    ERC721,
-    ERC721Enumerable,
-    ERC721URIStorage,
-    ERC721Burnable,
-    Ownable
-{
+contract Meetup is ERC721, ERC721Enumerable, ERC721URIStorage, ERC721Burnable, Ownable {
     string public title;
-    string public city; //
+    string public city;
     uint public index;
-    uint public startsDate; //
-    uint public endsDate; //
+    uint public startsDate;
+    uint public endsDate;
     bool public isActive;
 
     uint public registrations;
@@ -44,16 +39,7 @@ contract Meetup is
         CheckedAndGotNft
     }
 
-    constructor(
-        address _owner,
-        string memory _title,
-        string memory _city,
-        uint _index,
-        uint _startsDate,
-        uint _endsDate,
-        bool _isActive,
-        MeetupTracker _tracker
-    ) ERC721("MyToken", "MTK") {
+    constructor(address _owner, string memory _title, string memory _city, uint _index, uint _startsDate, uint _endsDate, bool _isActive, MeetupTracker _tracker) ERC721("MyToken", "MTK") {
         transferOwnership(_owner);
         title = _title;
         city = _city;
@@ -76,127 +62,64 @@ contract Meetup is
         tracker.closeMeetupByIndex(index, msg.sender);
     }
 
-    function reg(
-        string memory _name,
-        string memory _company,
-        string memory _role
-    ) public {
+    function reg(string memory _name, string memory _company, string memory _role) public {
         require(isActive, "Meetup has already ended");
         require(block.timestamp < startsDate, "Registration has already ended");
-        require(
-            members[msg.sender].state == MemberState.NotRegistred,
-            "You're already registred!"
-        );
+        require(members[msg.sender].state == MemberState.NotRegistred, "You're already registred!");
 
-        Member memory newMember = Member(
-            _name,
-            _company,
-            _role,
-            block.timestamp,
-            MemberState.Registered
-        );
+        Member memory newMember = Member(_name, _company, _role, block.timestamp, MemberState.Registered);
 
         members[msg.sender] = newMember;
         membersAddress.push(msg.sender);
 
         registrations++;
 
-        emit Events.Registration(
-            msg.sender,
-            _name,
-            block.timestamp,
-            uint(MemberState.Registered)
-        );
+        emit Events.Registration(msg.sender, _name, block.timestamp, uint(MemberState.Registered));
     }
 
     function reg(string memory _name) public {
         require(isActive, "Meetup has already ended");
         require(block.timestamp < startsDate, "Registration has already ended");
-        require(
-            members[msg.sender].state == MemberState.NotRegistred,
-            "You're already registred!"
-        );
+        require(members[msg.sender].state == MemberState.NotRegistred, "You're already registred!");
 
-        Member memory newMember = Member(
-            _name,
-            "",
-            "",
-            block.timestamp,
-            MemberState.Registered
-        );
+        Member memory newMember = Member(_name, "", "", block.timestamp, MemberState.Registered);
 
         members[msg.sender] = newMember;
         membersAddress.push(msg.sender);
 
         registrations++;
 
-        emit Events.Registration(
-            msg.sender,
-            _name,
-            block.timestamp,
-            uint(MemberState.Registered)
-        );
+        emit Events.Registration(msg.sender, _name, block.timestamp, uint(MemberState.Registered));
     }
 
-    function regWithCompany(
-        string memory _name,
-        string memory _company
-    ) public {
+    function regWithCompany(string memory _name, string memory _company) public {
         require(isActive, "Meetup has already ended");
         require(block.timestamp < startsDate, "Registration has already ended");
-        require(
-            members[msg.sender].state == MemberState.NotRegistred,
-            "You're already registred!"
-        );
+        require(members[msg.sender].state == MemberState.NotRegistred, "You're already registred!");
 
-        Member memory newMember = Member(
-            _name,
-            _company,
-            "",
-            block.timestamp,
-            MemberState.Registered
-        );
+        Member memory newMember = Member(_name, _company, "", block.timestamp, MemberState.Registered);
 
         members[msg.sender] = newMember;
         membersAddress.push(msg.sender);
 
         registrations++;
 
-        emit Events.Registration(
-            msg.sender,
-            _name,
-            block.timestamp,
-            uint(MemberState.Registered)
-        );
+        emit Events.Registration(msg.sender, _name, block.timestamp, uint(MemberState.Registered));
     }
 
     function regWithRole(string memory _name, string memory _role) public {
         require(isActive, "Meetup has already ended");
         require(block.timestamp < startsDate, "Registration has already ended");
-        require(
-            members[msg.sender].state == MemberState.NotRegistred,
-            "You're already registred!"
-        );
+        require(members[msg.sender].state == MemberState.NotRegistred, "You're already registred!");
 
-        Member memory newMember = Member(
-            _name,
-            "",
-            _role,
-            block.timestamp,
-            MemberState.Registered
-        );
+        Member memory newMember = Member(_name, "", _role, block.timestamp, MemberState.Registered);
 
         members[msg.sender] = newMember;
         membersAddress.push(msg.sender);
 
         registrations++;
 
-        emit Events.Registration(
-            msg.sender,
-            _name,
-            block.timestamp,
-            uint(MemberState.Registered)
-        );
+        emit Events.Registration(msg.sender, _name, block.timestamp, uint(MemberState.Registered));
     }
 
     function changeTitle(string memory _newTitle) public onlyOwner {
@@ -212,19 +135,11 @@ contract Meetup is
         city = _newCity;
     }
 
-    function changeDate(
-        uint _newStartsDate,
-        uint _newEndsDate
-    ) public onlyOwner {
+    function changeDate(uint _newStartsDate, uint _newEndsDate) public onlyOwner {
         startsDate = _newStartsDate;
         endsDate = _newEndsDate;
 
-        emit Events.ChangeDate(
-            index,
-            _newStartsDate,
-            _newEndsDate,
-            block.timestamp
-        );
+        emit Events.ChangeDate(index, _newStartsDate, _newEndsDate, block.timestamp);
     }
 
     function verify(address _addr) public view returns (bool) {
@@ -243,10 +158,7 @@ contract Meetup is
         currentTokenId++;
     }
 
-    function safeBatchMintAndCloseMeetup(
-        address[] memory addresses,
-        string calldata tokenId
-    ) public onlyOwner {
+    function safeBatchMintAndCloseMeetup(address[] memory addresses, string calldata tokenId) public onlyOwner {
         require(isActive, "Meetup is closed!");
         for (uint i = 0; i < addresses.length; i++) {
             address addr = addresses[i];
@@ -262,30 +174,19 @@ contract Meetup is
 
     // The following functions are overrides required by Solidity.
 
-    function _beforeTokenTransfer(
-        address from,
-        address to,
-        uint256 tokenId,
-        uint256 batchSize
-    ) internal override(ERC721, ERC721Enumerable) {
+    function _beforeTokenTransfer(address from, address to, uint256 tokenId, uint256 batchSize) internal override(ERC721, ERC721Enumerable) {
         super._beforeTokenTransfer(from, to, tokenId, batchSize);
     }
 
-    function _burn(
-        uint256 tokenId
-    ) internal override(ERC721, ERC721URIStorage) {
+    function _burn(uint256 tokenId) internal override(ERC721, ERC721URIStorage) {
         super._burn(tokenId);
     }
 
-    function tokenURI(
-        uint256 tokenId
-    ) public view override(ERC721, ERC721URIStorage) returns (string memory) {
+    function tokenURI(uint256 tokenId) public view override(ERC721, ERC721URIStorage) returns (string memory) {
         return super.tokenURI(tokenId);
     }
 
-    function supportsInterface(
-        bytes4 interfaceId
-    ) public view override(ERC721, ERC721Enumerable) returns (bool) {
+    function supportsInterface(bytes4 interfaceId) public view override(ERC721, ERC721Enumerable) returns (bool) {
         return super.supportsInterface(interfaceId);
     }
 }
