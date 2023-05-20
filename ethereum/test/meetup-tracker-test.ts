@@ -18,13 +18,10 @@ describe("MeetupTracker", function () {
     const meetupTracker: MeetupTracker = await MeetupTrackerFactory.deploy();
     await meetupTracker.deployed();
 
-    const firstMeetupCreated: any = await meetupTracker.connect(deployer).createMeetup(title, city, startsDate, endsDate);
+    const firstMeetupCreated: any = await meetupTracker
+      .connect(deployer)
+      .createMeetup(title, city, startsDate, endsDate);
     const firstMeetupTx = await firstMeetupCreated.wait();
-    console.log((await meetupTracker.meetups(index0)).isActive);
-
-    console.log(await meetupTracker.owner());
-    console.log(deployer.address);
-    console.log(user1.address);
 
     return { meetupTracker, firstMeetupCreated, firstMeetupTx, deployer, user1, user2, user3 };
   }
@@ -47,24 +44,32 @@ describe("MeetupTracker", function () {
   it("changeMeetupTitle", async function () {
     const { meetupTracker, deployer, user1 } = await loadFixture(deploy);
 
-    await expect(meetupTracker.connect(user1).changeMeetupTitle(index0, newTitle, user1.address)).to.be.revertedWith("You are not an owner!");
-    await expect(meetupTracker.connect(deployer).changeMeetupTitle(index0, newTitle, deployer.address)).to.not.be.reverted;
+    await expect(
+      meetupTracker.connect(user1).changeMeetupTitle(index0, newTitle, user1.address)
+    ).to.be.revertedWith("You are not an owner!");
+
+    await expect(
+      meetupTracker.connect(deployer).changeMeetupTitle(index0, newTitle, deployer.address)
+    ).to.not.be.reverted;
+
     expect((await meetupTracker.meetups(index0)).title).to.eq(newTitle);
   });
 
   it("closeMeetupByIndex", async function () {
     const { meetupTracker, deployer, user1 } = await loadFixture(deploy);
 
-    console.log((await meetupTracker.meetups(index0)).isActive);
+    await expect(
+      meetupTracker.connect(user1).closeMeetupByIndex(index0, user1.address)
+    ).to.be.revertedWith("You are not an owner!");
 
-    await expect(meetupTracker.connect(user1).closeMeetupByIndex(index0, user1.address)).to.be.revertedWith("You are not an owner!");
-    await expect(meetupTracker.connect(deployer).closeMeetupByIndex(index0, deployer.address)).to.not.be.reverted;
-
-    console.log((await meetupTracker.meetups(index0)).isActive);
+    await expect(meetupTracker.connect(deployer).closeMeetupByIndex(index0, deployer.address)).to
+      .not.be.reverted;
 
     await expect((await meetupTracker.meetups(index0)).isActive).to.eq(false);
 
-    await expect(meetupTracker.connect(deployer).closeMeetupByIndex(index0, deployer.address)).to.be.revertedWith("Meetup already closed!");
+    await expect(
+      meetupTracker.connect(deployer).closeMeetupByIndex(index0, deployer.address)
+    ).to.be.revertedWith("Meetup already closed!");
   });
 
   // it("allows to call pay() and message()", async function() {
