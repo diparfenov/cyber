@@ -23,29 +23,74 @@ contract MeetupTracker is Ownable {
         _;
     }
 
-    event MeetupCreated(uint indexed meetupIndex, bool isActive, address indexed meetupAddress, string indexed meetupTitle, uint atTime);
+    event MeetupCreated(
+        uint indexed meetupIndex,
+        bool isActive,
+        address indexed meetupAddress,
+        string indexed meetupTitle,
+        uint atTime
+    );
     event CloseMeetup(uint indexed index, bool indexed isActive, uint atTime);
-    event Donate(address indexed addr, uint indexed amount, uint indexed meetupIndex, string meetupTitle, uint atTime);
+    event Donate(
+        address indexed addr,
+        uint indexed amount,
+        uint indexed meetupIndex,
+        string meetupTitle,
+        uint atTime
+    );
     event DonateGlobal(address indexed addr, uint indexed amount, uint indexed atTime);
     event Withdraw(uint indexed amount, address indexed addr, uint indexed atTime);
 
-    function createMeetup(string memory _title, string memory _city, uint _startsDate, uint _endsDate) public onlyOwner {
-        Meetup newMeetupContract = new Meetup(msg.sender, _title, _city, currentIndex, _startsDate, _endsDate, true, this);
+    function createMeetup(
+        string memory _title,
+        string memory _city,
+        uint _startsDate,
+        uint _endsDate
+    ) public onlyOwner {
+        Meetup newMeetupContract = new Meetup(
+            msg.sender,
+            _title,
+            _city,
+            currentIndex,
+            _startsDate,
+            _endsDate,
+            true,
+            this
+        );
 
-        Meetups memory newMeetup = Meetups(newMeetupContract, _title, currentIndex, true, block.timestamp);
+        Meetups memory newMeetup = Meetups(
+            newMeetupContract,
+            _title,
+            currentIndex,
+            true,
+            block.timestamp
+        );
 
         meetups.push(newMeetup);
 
-        emit MeetupCreated(currentIndex, meetups[currentIndex].isActive, address(newMeetupContract), _title, block.timestamp);
+        emit MeetupCreated(
+            currentIndex,
+            meetups[currentIndex].isActive,
+            address(newMeetupContract),
+            _title,
+            block.timestamp
+        );
 
         currentIndex++;
     }
 
-    function changeMeetupTitle(uint _index, string memory _newTitle, address _addressOwner) external onlyOwnerV2(_addressOwner) {
+    function changeMeetupTitle(
+        uint _index,
+        string memory _newTitle,
+        address _addressOwner
+    ) external onlyOwnerV2(_addressOwner) {
         meetups[_index].title = _newTitle;
     }
 
-    function closeMeetupByIndex(uint _index, address _addressOwner) external onlyOwnerV2(_addressOwner) {
+    function closeMeetupByIndex(
+        uint _index,
+        address _addressOwner
+    ) external onlyOwnerV2(_addressOwner) {
         require(meetups[_index].isActive, "Meetup already closed!");
         meetups[_index].isActive = false;
 
@@ -66,6 +111,7 @@ contract MeetupTracker is Ownable {
     }
 
     function donateGlobal() public payable {
+        require(msg.value > 0, "Donation can't be less than zero");
         donatesGlobal[msg.sender] = msg.value;
 
         emit DonateGlobal(msg.sender, msg.value, block.timestamp);

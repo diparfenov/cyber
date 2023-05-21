@@ -27,18 +27,25 @@ describe("MeetupTracker", function () {
   }
 
   it("createdMeetup", async function () {
-    const { meetupTracker, firstMeetupTx } = await loadFixture(deploy);
+    const { meetupTracker, firstMeetupTx, user1 } = await loadFixture(deploy);
 
     const block = await ethers.provider.getBlock(firstMeetupTx.blockHash);
     const blockTime = block.timestamp;
 
     const firstMeetupInArray = await meetupTracker.meetups(index0);
 
-    expect(firstMeetupInArray.meetup).to.eq(firstMeetupTx.events[2].args[2]);
-    expect(firstMeetupInArray.title).to.eq(title);
-    expect(firstMeetupInArray.index).to.eq(index0);
-    expect(firstMeetupInArray.isActive).to.eq(true);
-    expect(firstMeetupInArray.timeCreated).to.eq(blockTime);
+    await expect(firstMeetupInArray.meetup).to.eq(firstMeetupTx.events[2].args[2]);
+    await expect(firstMeetupInArray.title).to.eq(title);
+    await expect(firstMeetupInArray.index).to.eq(index0);
+    await expect(firstMeetupInArray.isActive).to.eq(true);
+    await expect(firstMeetupInArray.timeCreated).to.eq(blockTime);
+
+    await expect(
+      meetupTracker.connect(user1).createMeetup(title, city, startsDate, endsDate)
+    ).to.be.revertedWith("Ownable: caller is not the owner");
+
+    await expect(await meetupTracker.connect(user1).getMeetupByIndex(index0)).to.not.be.reverted;
+    await expect(await meetupTracker.connect(user1).getMeetups()).to.not.be.reverted;
   });
 
   it("changeMeetupTitle", async function () {
@@ -72,30 +79,61 @@ describe("MeetupTracker", function () {
     ).to.be.revertedWith("Meetup already closed!");
   });
 
-  // it("allows to call pay() and message()", async function() {
-  //   const { sample, deployer } = await loadFixture(deploy);
+  it("donate, donateGlobal and withdraw", async function () {
+    const { meetupTracker, deployer, user1, user2 } = await loadFixture(deploy);
 
-  //   const value = 1000;
-  //   const tx = await sample.pay("hi", {value: value});
-  //   await tx.wait();
+    const firstValue = 100000;
+    const firstTx = await meetupTracker.connect(user1).donateGlobal({ value: firstValue });
+    await firstTx.wait();
 
-  //   expect(await sample.get()).to.eq(value);
-  //   expect(await sample.message()).to.eq("hi");
-  // });
+    const secondValue = 50000;
+    const secondTx = await meetupTracker
+      .connect(user2)
+      .donate(index0, user2.address, { value: secondValue });
+    await secondTx.wait();
 
-  // it("allows to call callMe()", async function() {
-  //   const { sample, user } = await loadFixture(deploy);
+    await expect(await meetupTracker.donatesGlobal(user1.address)).to.eq(firstValue);
+    await expect(await meetupTracker.donatesByAddress(index0, user2.address)).to.eq(secondValue);
+    await expect(await meetupTracker.viewDonate(index0, user2.address)).to.eq(secondValue);
 
-  //   const sampleAsUser = Sample__factory.connect(sample.address, user);
-  //   const tx = await sampleAsUser.callMe();
-  //   await tx.wait();
+    await expect(meetupTracker.connect(user1).withdraw(1000)).to.be.revertedWith(
+      "Ownable: caller is not the owner"
+    );
 
-  //   expect(await sampleAsUser.caller()).to.eq(user.address);
-  // });
+    await expect(meetupTracker.connect(deployer).withdraw(200000)).to.be.revertedWith(
+      "Insufficient balance"
+    );
 
-  // it("reverts call to callError() with Panic", async function() {
-  //   const { sample, deployer } = await loadFixture(deploy);
+    await expect(meetupTracker.connect(deployer).withdraw(100000)).to.not.be.reverted;
 
-  //   await expect(sample.callError()).to.be.revertedWithPanic();
-  // });
+    await expect(meetupTracker.connect(user2).donate(index0, user2.address, { value: 100000 })).to
+      .not.be.reverted;
+    await expect(meetupTracker.connect(user1).donateGlobal({ value: 100000 })).to.not.be.reverted;
+    await expect(meetupTracker.connect(user1).donateGlobal({ value: 0 })).to.be.revertedWith(
+      "Donation can't be less than zero"
+    );
+  });
+
+  it("should receive and update contract balance", async () => {
+    const { meetupTracker, deployer, user1 } = await loadFixture(deploy);
+
+    // Получение баланса контракта до вызова функции receive
+    const initialBalance = await ethers.provider.getBalance(meetupTracker.address);
+
+    const amount = ethers.utils.parseEther("1");
+
+    let tx = {
+      to: meetupTracker.address,
+      value: amount,
+    };
+
+    let sendMoneyTx = await user1.sendTransaction(tx);
+    await sendMoneyTx.wait();
+
+    // Получение обновленного баланса контракта после вызова функции receive
+    const updatedBalance = await ethers.provider.getBalance(meetupTracker.address);
+
+    // Проверка, что баланс контракта увеличился на amount
+    expect(updatedBalance).to.equal(initialBalance.add(amount));
+  });
 });
