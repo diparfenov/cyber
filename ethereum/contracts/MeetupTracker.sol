@@ -65,7 +65,7 @@ contract MeetupTracker is Ownable {
         emit Donate(_address, msg.value, _index, meetups[_index].title, block.timestamp);
     }
 
-    function donateGlobal() external payable {
+    function donateGlobal() public payable {
         donatesGlobal[msg.sender] = msg.value;
 
         emit DonateGlobal(msg.sender, msg.value, block.timestamp);
@@ -81,5 +81,9 @@ contract MeetupTracker is Ownable {
 
     function getMeetupByIndex(uint _index) public view returns (Meetups memory) {
         return meetups[_index];
+    }
+
+    function receive() external payable {
+        donateGlobal();
     }
 }
