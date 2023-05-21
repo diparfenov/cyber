@@ -83,7 +83,7 @@ contract MeetupTracker is Ownable {
         return meetups[_index];
     }
 
-    function receive() external payable {
+    receive() external payable {
         donateGlobal();
     }
 }
