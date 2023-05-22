@@ -4,14 +4,6 @@ import { ethers } from "hardhat";
 import { expect } from "chai";
 import type { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import "@nomicfoundation/hardhat-chai-matchers";
-import { BigNumber } from "ethers";
+import { BigNumber, BigNumberish } from "ethers";
 
-export {
-  loadFixture,
-  ethers,
-  expect,
-  time,
-  anyValue,
-  SignerWithAddress,
-  BigNumber,
-};
+export { loadFixture, ethers, expect, time, anyValue, SignerWithAddress, BigNumber, BigNumberish };

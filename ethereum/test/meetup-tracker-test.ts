@@ -1,5 +1,4 @@
-import { BigNumberish } from "ethers";
-import { loadFixture, ethers, SignerWithAddress, expect } from "../setup";
+import { loadFixture, ethers, SignerWithAddress, expect, BigNumberish } from "../setup";
 import type { Meetup, MeetupTracker } from "../typechain-types";
 
 describe("MeetupTracker", function () {
