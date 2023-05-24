@@ -1,3 +1,3 @@
 module.exports = {
-  skipFiles: ["Events.sol", "Meetup.sol"],
+  skipFiles: ["Events.sol", "MeetupTracker.sol"],
 };

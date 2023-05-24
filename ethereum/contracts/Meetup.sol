@@ -8,7 +8,6 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
 
 import "./MeetupTracker.sol";
-import "./Events.sol";
 
 contract Meetup is ERC721, ERC721Enumerable, ERC721URIStorage, ERC721Burnable, Ownable {
     string public title;
@@ -38,6 +37,16 @@ contract Meetup is ERC721, ERC721Enumerable, ERC721URIStorage, ERC721Burnable, O
         Registered,
         CheckedAndGotNft
     }
+
+    event Registration(address indexed memberAddress, string indexed memberName, uint indexed _atTime, uint _state);
+
+    event BatchMint(address[] indexed addresses, uint indexed atTime);
+
+    event ChangeTitle(uint indexed index, string indexed oldTitle, string indexed _newTitle, uint atTime);
+
+    event ChangeCity(uint indexed index, string indexed oldCity, string indexed newCity, uint atTime);
+
+    event ChangeDate(uint indexed index, uint indexed newStartsDate, uint indexed newEndsDate, uint atTime);
 
     constructor(
         address _owner,
@@ -89,7 +98,7 @@ contract Meetup is ERC721, ERC721Enumerable, ERC721URIStorage, ERC721Burnable, O
 
         registrations++;
 
-        emit Events.Registration(msg.sender, _name, block.timestamp, uint(MemberState.Registered));
+        emit Registration(msg.sender, _name, block.timestamp, uint(MemberState.Registered));
     }
 
     function reg(string memory _name) public {
@@ -104,7 +113,7 @@ contract Meetup is ERC721, ERC721Enumerable, ERC721URIStorage, ERC721Burnable, O
 
         registrations++;
 
-        emit Events.Registration(msg.sender, _name, block.timestamp, uint(MemberState.Registered));
+        emit Registration(msg.sender, _name, block.timestamp, uint(MemberState.Registered));
     }
 
     function regWithCompany(string memory _name, string memory _company) public {
@@ -125,7 +134,7 @@ contract Meetup is ERC721, ERC721Enumerable, ERC721URIStorage, ERC721Burnable, O
 
         registrations++;
 
-        emit Events.Registration(msg.sender, _name, block.timestamp, uint(MemberState.Registered));
+        emit Registration(msg.sender, _name, block.timestamp, uint(MemberState.Registered));
     }
 
     function regWithRole(string memory _name, string memory _role) public {
@@ -140,7 +149,7 @@ contract Meetup is ERC721, ERC721Enumerable, ERC721URIStorage, ERC721Burnable, O
 
         registrations++;
 
-        emit Events.Registration(msg.sender, _name, block.timestamp, uint(MemberState.Registered));
+        emit Registration(msg.sender, _name, block.timestamp, uint(MemberState.Registered));
     }
 
     function changeTitle(string memory _newTitle) public onlyOwner {
@@ -160,7 +169,7 @@ contract Meetup is ERC721, ERC721Enumerable, ERC721URIStorage, ERC721Burnable, O
         startsDate = _newStartsDate;
         endsDate = _newEndsDate;
 
-        emit Events.ChangeDate(index, _newStartsDate, _newEndsDate, block.timestamp);
+        emit ChangeDate(index, _newStartsDate, _newEndsDate, block.timestamp);
     }
 
     function verify(address _addr) public view returns (bool) {
@@ -191,7 +200,7 @@ contract Meetup is ERC721, ERC721Enumerable, ERC721URIStorage, ERC721Burnable, O
             }
         }
 
-        emit Events.BatchMint(addresses, block.timestamp);
+        emit BatchMint(addresses, block.timestamp);
 
         closeMeetup();
     }
