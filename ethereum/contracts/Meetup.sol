@@ -38,15 +38,35 @@ contract Meetup is ERC721, ERC721Enumerable, ERC721URIStorage, ERC721Burnable, O
         CheckedAndGotNft
     }
 
-    event Registration(address indexed memberAddress, string indexed memberName, uint indexed _atTime, uint _state);
+    event Registration(
+        address indexed memberAddress,
+        string indexed memberName,
+        uint indexed _atTime,
+        uint _state
+    );
 
     event BatchMint(address[] indexed addresses, uint indexed atTime);
 
-    event ChangeTitle(uint indexed index, string indexed oldTitle, string indexed _newTitle, uint atTime);
+    event ChangeTitle(
+        uint indexed index,
+        string indexed oldTitle,
+        string indexed _newTitle,
+        uint atTime
+    );
 
-    event ChangeCity(uint indexed index, string indexed oldCity, string indexed newCity, uint atTime);
+    event ChangeCity(
+        uint indexed index,
+        string indexed oldCity,
+        string indexed newCity,
+        uint atTime
+    );
 
-    event ChangeDate(uint indexed index, uint indexed newStartsDate, uint indexed newEndsDate, uint atTime);
+    event ChangeDate(
+        uint indexed index,
+        uint indexed newStartsDate,
+        uint indexed newEndsDate,
+        uint atTime
+    );
 
     constructor(
         address _owner,
@@ -68,9 +88,9 @@ contract Meetup is ERC721, ERC721Enumerable, ERC721URIStorage, ERC721Burnable, O
         tracker = MeetupTracker(_tracker);
     }
 
-    function doDonate() public payable {
-        require(msg.value > 0, "Donation can't be less than zero");
-        tracker.donate{value: msg.value}(index, msg.sender);
+    function doDonate(uint _value) public payable {
+        require(_value > 0, "Donation can't be less than zero");
+        tracker.donate{value: _value}(index, msg.sender);
     }
 
     function closeMeetup() public onlyOwner {
@@ -153,14 +173,14 @@ contract Meetup is ERC721, ERC721Enumerable, ERC721URIStorage, ERC721Burnable, O
     }
 
     function changeTitle(string memory _newTitle) public onlyOwner {
-        emit Events.ChangeTitle(index, title, _newTitle, block.timestamp);
+        emit ChangeTitle(index, title, _newTitle, block.timestamp);
 
         title = _newTitle;
         tracker.changeMeetupTitle(index, _newTitle, msg.sender);
     }
 
     function changeCity(string memory _newCity) public onlyOwner {
-        emit Events.ChangeCity(index, city, _newCity, block.timestamp);
+        emit ChangeCity(index, city, _newCity, block.timestamp);
 
         city = _newCity;
     }
@@ -233,6 +253,6 @@ contract Meetup is ERC721, ERC721Enumerable, ERC721URIStorage, ERC721Burnable, O
     }
 
     receive() external payable {
-        doDonate();
+        doDonate(msg.value);
     }
 }

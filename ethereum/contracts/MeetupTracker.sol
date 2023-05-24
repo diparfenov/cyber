@@ -112,7 +112,7 @@ contract MeetupTracker is Ownable {
 
     function donateGlobal() public payable {
         require(msg.value > 0, "Donation can't be less than zero");
-        donatesGlobal[msg.sender] = msg.value;
+        donatesGlobal[msg.sender] += msg.value;
 
         emit DonateGlobal(msg.sender, msg.value, block.timestamp);
     }
