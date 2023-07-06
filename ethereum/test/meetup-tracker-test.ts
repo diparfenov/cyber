@@ -4,15 +4,13 @@ import type { Meetup, MeetupTracker } from "../typechain-types";
 describe("MeetupTracker", function () {
   let title: string = "The Scaling Meetup";
   let city: string = "Tbilisi";
-  let startsDate: BigNumberish = ethers.BigNumber.from(1685037600); //25.05.2023-18:00
-  let endsDate: BigNumberish = ethers.BigNumber.from(1685048400); //25.05.2023-21:00
+  let startsDate: BigNumberish = ethers.BigNumber.from(1688644126); //06 Jul 2023 11:48:46 GMT
+  let endsDate: BigNumberish = ethers.BigNumber.from(1688680126); //06 Jul 2023 21:48:46 GMT
   let index0: BigNumberish = ethers.BigNumber.from(0);
 
   let newTitle: string = "The Scaling Meetup V2";
 
-  async function deploy(
-    
-  ) {
+  async function deploy() {
     const [deployer, user1, user2, user3] = await ethers.getSigners();
 
     const MeetupTrackerFactory = await ethers.getContractFactory("MeetupTracker");
