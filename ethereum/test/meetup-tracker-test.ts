@@ -10,7 +10,9 @@ describe("MeetupTracker", function () {
 
   let newTitle: string = "The Scaling Meetup V2";
 
-  async function deploy() {
+  async function deploy(
+    
+  ) {
     const [deployer, user1, user2, user3] = await ethers.getSigners();
 
     const MeetupTrackerFactory = await ethers.getContractFactory("MeetupTracker");
