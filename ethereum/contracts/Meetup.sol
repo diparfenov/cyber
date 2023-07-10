@@ -40,46 +40,17 @@ contract Meetup is ERC721, ERC721Enumerable, ERC721URIStorage, ERC721Burnable, O
         CheckedAndGotNft
     }
 
-    event Registration(
-        address indexed memberAddress,
-        string indexed memberName,
-        uint indexed _atTime,
-        uint _state
-    );
+    event Registration(address indexed memberAddress, string indexed memberName, uint indexed _atTime, uint _state);
 
     event BatchMint(address[] indexed addresses, uint indexed atTime);
 
-    event ChangeTitle(
-        uint indexed index,
-        string indexed oldTitle,
-        string indexed _newTitle,
-        uint atTime
-    );
+    event ChangeTitle(uint indexed index, string indexed oldTitle, string indexed _newTitle, uint atTime);
 
-    event ChangeCity(
-        uint indexed index,
-        string indexed oldCity,
-        string indexed newCity,
-        uint atTime
-    );
+    event ChangeCity(uint indexed index, string indexed oldCity, string indexed newCity, uint atTime);
 
-    event ChangeDate(
-        uint indexed index,
-        uint indexed newStartsDate,
-        uint indexed newEndsDate,
-        uint atTime
-    );
+    event ChangeDate(uint indexed index, uint indexed newStartsDate, uint indexed newEndsDate, uint atTime);
 
-    constructor(
-        address _owner,
-        string memory _title,
-        string memory _city,
-        uint _index,
-        uint _startsDate,
-        uint _endsDate,
-        bool _isActive,
-        MeetupTracker _tracker
-    ) ERC721("MyToken", "MTK") {
+    constructor(address _owner, string memory _title, string memory _city, uint _index, uint _startsDate, uint _endsDate, bool _isActive, MeetupTracker _tracker) ERC721("MyToken", "MTK") {
         transferOwnership(_owner);
         title = _title;
         city = _city;
@@ -90,9 +61,8 @@ contract Meetup is ERC721, ERC721Enumerable, ERC721URIStorage, ERC721Burnable, O
         tracker = MeetupTracker(_tracker);
     }
 
-    function doDonate(uint _value) public payable {
-        require(_value > 0, "Donation can't be less than zero");
-        tracker.donate{value: _value}(index, msg.sender);
+    function doDonate() public payable {
+        tracker.donate{value: msg.value}(index, msg.sender);
     }
 
     function closeMeetup() public onlyOwner {
@@ -107,13 +77,7 @@ contract Meetup is ERC721, ERC721Enumerable, ERC721URIStorage, ERC721Burnable, O
         require(block.timestamp < startsDate, "Registration has already ended");
         require(members[msg.sender].state == MemberState.NotRegistred, "You're already registred!");
 
-        Member memory newMember = Member(
-            _name,
-            _company,
-            _role,
-            block.timestamp,
-            MemberState.Registered
-        );
+        Member memory newMember = Member(_name, _company, _role, block.timestamp, MemberState.Registered);
 
         members[msg.sender] = newMember;
         membersAddress.push(msg.sender);
@@ -143,13 +107,7 @@ contract Meetup is ERC721, ERC721Enumerable, ERC721URIStorage, ERC721Burnable, O
         require(block.timestamp < startsDate, "Registration has already ended");
         require(members[msg.sender].state == MemberState.NotRegistred, "You're already registred!");
 
-        Member memory newMember = Member(
-            _name,
-            _company,
-            "",
-            block.timestamp,
-            MemberState.Registered
-        );
+        Member memory newMember = Member(_name, _company, "", block.timestamp, MemberState.Registered);
 
         members[msg.sender] = newMember;
         membersAddress.push(msg.sender);
@@ -210,10 +168,7 @@ contract Meetup is ERC721, ERC721Enumerable, ERC721URIStorage, ERC721Burnable, O
         currentTokenId++;
     }
 
-    function safeBatchMintAndCloseMeetup(
-        address[] memory addresses,
-        string calldata tokenId
-    ) public onlyOwner {
+    function safeBatchMintAndCloseMeetup(address[] memory addresses, string calldata tokenId) public onlyOwner {
         require(isActive, "Meetup is closed!");
         for (uint i = 0; i < addresses.length; i++) {
             address addr = addresses[i];
@@ -229,12 +184,7 @@ contract Meetup is ERC721, ERC721Enumerable, ERC721URIStorage, ERC721Burnable, O
 
     // The following functions are overrides required by Solidity.
 
-    function _beforeTokenTransfer(
-        address from,
-        address to,
-        uint256 tokenId,
-        uint256 batchSize
-    ) internal override(ERC721, ERC721Enumerable) {
+    function _beforeTokenTransfer(address from, address to, uint256 tokenId, uint256 batchSize) internal override(ERC721, ERC721Enumerable) {
         super._beforeTokenTransfer(from, to, tokenId, batchSize);
     }
 
@@ -242,15 +192,11 @@ contract Meetup is ERC721, ERC721Enumerable, ERC721URIStorage, ERC721Burnable, O
         super._burn(tokenId);
     }
 
-    function tokenURI(
-        uint256 tokenId
-    ) public view override(ERC721, ERC721URIStorage) returns (string memory) {
+    function tokenURI(uint256 tokenId) public view override(ERC721, ERC721URIStorage) returns (string memory) {
         return super.tokenURI(tokenId);
     }
 
-    function supportsInterface(
-        bytes4 interfaceId
-    ) public view override(ERC721, ERC721Enumerable, ERC721URIStorage) returns (bool) {
+    function supportsInterface(bytes4 interfaceId) public view override(ERC721, ERC721Enumerable, ERC721URIStorage) returns (bool) {
         return super.supportsInterface(interfaceId);
     }
 
