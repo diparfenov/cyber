@@ -105,6 +105,8 @@ contract MeetupTracker is Ownable {
     }
 
     function donate(uint _index, address _address) external payable {
+        require(msg.value > 0, "Donation can't be less than zero");
+        require(_index < currentIndex, "Meetup not created");
         donatesByAddress[_index][_address] += msg.value;
 
         emit Donate(_address, msg.value, _index, meetups[_index].title, block.timestamp);
