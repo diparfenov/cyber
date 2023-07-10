@@ -138,6 +138,19 @@ describe("Meetup", function () {
 
     const newTitleInMapping = (await meetupTracker.meetups(0)).title;
 
-    await expect(newTitleInMapping).to.eq(newTitleInMapping);
+    await expect(newTitleInMapping).to.eq(newTitle);
+  });
+
+  it("changeCity", async function () {
+    const { meetupAddress, deployer, user1 } = await loadFixture(deploy);
+
+    const newCity: string = "NewCity";
+
+    await expect(Meetup__factory.connect(meetupAddress, user1).changeCity(newCity)).to.be.revertedWith("Ownable: caller is not the owner");
+    await expect(Meetup__factory.connect(meetupAddress, deployer).changeCity(newCity)).to.not.be.reverted;
+
+    const changedCity = await Meetup__factory.connect(meetupAddress, user1).city();
+
+    await expect(changedCity).to.eq(newCity);
   });
 });
