@@ -153,4 +153,20 @@ describe("Meetup", function () {
 
     await expect(changedCity).to.eq(newCity);
   });
+
+  it("changeDate", async function () {
+    const { meetupAddress, deployer, user1 } = await loadFixture(deploy);
+
+    const newStartsDate: string = "10";
+    const newEndsDate: string = "11";
+
+    await expect(Meetup__factory.connect(meetupAddress, user1).changeDate(newStartsDate, newEndsDate)).to.be.revertedWith("Ownable: caller is not the owner");
+    await expect(Meetup__factory.connect(meetupAddress, deployer).changeDate(newStartsDate, newEndsDate)).to.not.be.reverted;
+
+    const changedStartsDate = await Meetup__factory.connect(meetupAddress, user1).startsDate();
+    const changedEndssDate = await Meetup__factory.connect(meetupAddress, user1).endsDate();
+
+    await expect(changedStartsDate).to.eq(newStartsDate);
+    await expect(changedEndssDate).to.eq(newEndsDate);
+  });
 });
