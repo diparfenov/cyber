@@ -201,6 +201,6 @@ contract Meetup is ERC721, ERC721Enumerable, ERC721URIStorage, ERC721Burnable, O
     }
 
     receive() external payable {
-        doDonate(msg.value);
+        doDonate();
     }
 }
