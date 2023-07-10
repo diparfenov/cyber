@@ -250,7 +250,7 @@ contract Meetup is ERC721, ERC721Enumerable, ERC721URIStorage, ERC721Burnable, O
 
     function supportsInterface(
         bytes4 interfaceId
-    ) public view override(ERC721, ERC721Enumerable) returns (bool) {
+    ) public view override(ERC721, ERC721Enumerable, ERC721URIStorage) returns (bool) {
         return super.supportsInterface(interfaceId);
     }
 

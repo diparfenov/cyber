@@ -1,41 +1,54 @@
-// import { loadFixture, ethers, SignerWithAddress, expect, BigNumberish } from "../setup";
-// import type { Meetup, MeetupTracker } from "../typechain-types";
+import { loadFixture, ethers, SignerWithAddress, expect, BigNumberish } from "../setup";
+import { Meetup__factory, type Meetup, type MeetupTracker } from "../typechain-types";
 
-// describe("Meetup", function () {
-//   let title: string = "The First Meetup";
-//   let city: string = "Oslo";
-//   let startsDate: BigNumberish = ethers.BigNumber.from(1685037600); //25.05.2023-18:00
-//   let endsDate: BigNumberish = ethers.BigNumber.from(1685048400); //25.05.2023-21:00
+describe("Meetup", function () {
+  let title: string = "The First Meetup";
+  let city: string = "Oslo";
+  let startsDate: BigNumberish = ethers.BigNumber.from(1688999853); //10 Jul 2023 11:48:46 GMT
+  let endsDate: BigNumberish = ethers.BigNumber.from(1689025053); // Jul 2023 21:48:46 GMT
 
-//   async function deploy() {
-//     const [deployer, user1, user2, user3] = await ethers.getSigners();
+  async function deploy() {
+    const [deployer, user1, user2, user3] = await ethers.getSigners();
 
-//     const MeetupTrackerFactory = await ethers.getContractFactory("MeetupTracker");
-//     const meetupTracker: MeetupTracker = await MeetupTrackerFactory.deploy();
-//     await meetupTracker.deployed();
+    const MeetupTrackerFactory = await ethers.getContractFactory("MeetupTracker");
+    const meetupTracker: MeetupTracker = await MeetupTrackerFactory.deploy();
+    await meetupTracker.deployed();
 
-//     const firstMeetupCreated: any = await meetupTracker
-//       .connect(deployer)
-//       .createMeetup(title, city, startsDate, endsDate);
+    const firstMeetupCreated: any = await meetupTracker
+      .connect(deployer)
+      .createMeetup(title, city, startsDate, endsDate);
 
-//     const firstMeetupTx = await firstMeetupCreated.wait();
+    const firstMeetupTx = await firstMeetupCreated.wait();
 
-//     const meetupAddress = firstMeetupTx.events[2].args[2];
+    const meetupAddress = firstMeetupTx.events[2].args[2];
+    const meetupTrackerAddress = meetupTracker.address;
 
-//     console.log(meetupAddress);
+    return { meetupTracker, meetupAddress, meetupTrackerAddress, deployer, user1, user2, user3 };
+  }
 
-//     const MeetupFactory = await ethers.getContractFactory("Meetup");
-//     const meetup: Meetup = await MeetupFactory.attach(meetupAddress);
+  it("reg", async function () {
+    const { meetupAddress, deployer, user1 } = await loadFixture(deploy);
 
-//     return { meetupTracker, meetup, deployer, user1, user2, user3 };
-//   }
+    const firstMeetup: Meetup = Meetup__factory.connect(meetupAddress, user1);
 
-//   it("doDonate", async function () {
-//     const { meetup, deployer, user1 } = await loadFixture(deploy);
-//     await expect(meetup.connect(user1)["reg(string)"]("Dima")).to.not.be.reverted;
+    const meetupTracker = firstMeetup.tracker();
 
-//     await expect(meetup.doDonate(0)).to.be.revertedWith("Donation can't be less than zero");
+    const amount = ethers.utils.parseEther("1");
 
-//     await expect(meetup.connect(user1).doDonate(100)).to.to.not.be.reverted;
-//   });
-// });
+    const initialBalance = await ethers.provider.getBalance(meetupTracker);
+
+    const updatedBalance = await ethers.provider.getBalance(meetupTracker);
+    console.log(updatedBalance);
+
+    await expect(firstMeetup["reg(string)"]("Dima")).to.not.be.reverted;
+
+    const tx = await firstMeetup.doDonate(0);
+    await tx.wait();
+
+    //await expect(updatedBalance).to.equal(initialBalance.add(100));
+
+    await expect(firstMeetup.doDonate(0)).to.be.revertedWith("Donation can't be less than zero");
+
+    // await expect(meetup.connect(user1).doDonate(100)).to.to.not.be.reverted;
+  });
+});
