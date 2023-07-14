@@ -58,6 +58,7 @@ describe("Meetup", function () {
 
     await expect(valueInMapping).to.eq(updatedBalance2);
   });
+  //фыв
 
   it("reg", async function () {
     const { meetupAddress, deployer, user1, user2, user3, user4 } = await loadFixture(deploy);
