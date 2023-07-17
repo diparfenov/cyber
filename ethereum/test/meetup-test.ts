@@ -60,6 +60,7 @@ describe("Meetup", function () {
   });
   //фыв
   //фыв
+  //ф
 
   it("reg", async function () {
     const { meetupAddress, deployer, user1, user2, user3, user4 } = await loadFixture(deploy);
