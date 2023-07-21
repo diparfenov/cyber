@@ -58,9 +58,6 @@ describe("Meetup", function () {
 
     await expect(valueInMapping).to.eq(updatedBalance2);
   });
-  //фыв
-  //фыв
-  //ф
   //wwr
 
   ///qd
