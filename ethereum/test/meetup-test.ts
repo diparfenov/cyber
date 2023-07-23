@@ -171,4 +171,15 @@ describe("Meetup", function () {
     await expect(changedStartsDate).to.eq(newStartsDate);
     await expect(changedEndssDate).to.eq(newEndsDate);
   });
+
+  it("verify", async function () {
+    const { meetupAddress, deployer, user1 } = await loadFixture(deploy);
+
+    await expect(Meetup__factory.connect(meetupAddress, user1).changeCity(newCity)).to.be.revertedWith("Ownable: caller is not the owner");
+    await expect(Meetup__factory.connect(meetupAddress, deployer).changeCity(newCity)).to.not.be.reverted;
+
+    const changedCity = await Meetup__factory.connect(meetupAddress, user1).city();
+
+    await expect(changedCity).to.eq(newCity);
+  });
 });
