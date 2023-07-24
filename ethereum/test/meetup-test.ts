@@ -180,6 +180,6 @@ describe("Meetup", function () {
 
     const changedCity = await Meetup__factory.connect(meetupAddress, user1).city();
 
-    await expect(changedCity).to.eq(newCity);
+    await expect(changedCity).to.eq();
   });
 });
