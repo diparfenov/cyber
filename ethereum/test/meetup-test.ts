@@ -5,8 +5,8 @@ import { mineBlocks, timeTravel } from "../scripts/utils";
 describe("Meetup", function () {
   let title: string = "The First Meetup";
   let city: string = "Oslo";
-  let startsDate: BigNumberish = ethers.BigNumber.from(1696731072); //11 Jul 2023 11:48:46 GMT
-  let endsDate: BigNumberish = ethers.BigNumber.from(1690067079); //11 Jul 2023 21:48:46 GMT
+  let startsDate: BigNumberish = ethers.BigNumber.from(1696731402); //11 Jul 2023 11:48:46 GMT
+  let endsDate: BigNumberish = ethers.BigNumber.from(1690064079); //11 Jul 2023 21:48:46 GMT
 
   async function deploy() {
     const [deployer, user1, user2, user3, user4, user5, user6] = await ethers.getSigners();
